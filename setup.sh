@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Plowshare.  If not, see <http://www.gnu.org/licenses/>.
 
+source ./src/core.sh
+
 set -e
 
 NAME=plowshare4
@@ -72,7 +74,8 @@ elif [ "$1" = 'install' ]; then
 
     # Common library
     mkdir -p "$DATADIR"
-    $CP -p src/core.sh     \
+    $CP -p \
+        src/core.sh        \
         src/download.sh    \
         src/upload.sh      \
         src/delete.sh      \
@@ -86,17 +89,22 @@ elif [ "$1" = 'install' ]; then
 
     # Binary files
     mkdir -p "$BINDIR"
+
     $LN_S "$DATADIR_FINAL/download.sh" "$BINDIR/plowdown"
     $LN_S "$DATADIR_FINAL/upload.sh" "$BINDIR/plowup"
     $LN_S "$DATADIR_FINAL/delete.sh" "$BINDIR/plowdel"
     $LN_S "$DATADIR_FINAL/list.sh" "$BINDIR/plowlist"
     $LN_S "$DATADIR_FINAL/probe.sh" "$BINDIR/plowprobe"
-
+    echo "Linked binary files."
+    
     # Check sed version (don't use `uname -s` yet..)
     SED=`sed --version 2>&1 | sed 1q` || true
     case $SED in
         # GNU sed version 4.2.1
-        GNU\ sed*)
+        "GNU sed"*)
+            ;;
+        # GNUtools GNU sed version 4.2.1
+        "gsed (GNU sed)"*)
             ;;
         # BSD, Busybox (old versions):
         # sed: illegal option -- -
