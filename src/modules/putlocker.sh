@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# putlocker.com module
+# putlocker.com & sockshare.com module
 # Copyright (c) 2012-2013 Plowshare team
 #
 # This file is part of Plowshare.
@@ -18,7 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Plowshare.  If not, see <http://www.gnu.org/licenses/>.
 
+<<<<<<< HEAD
+MODULE_PUTLOCKER_REGEXP_URL="\(http://\(www\.\)\?\(putlocker\.com\|sockshare\.com\)\)/file/"
+=======
 MODULE_PUTLOCKER_REGEXP_URL='http://\(www\.\)\?putlocker\.com/file/'
+>>>>>>> fa1e188def0335574c7907ee5d6a7c5d1eb4c470
 
 MODULE_PUTLOCKER_DOWNLOAD_OPTIONS="
 LINK_PASSWORD,p,link-password,S=PASSWORD,Used in password-protected files"
@@ -32,6 +36,13 @@ MODULE_PUTLOCKER_UPLOAD_REMOTE_SUPPORT=no
 
 MODULE_PUTLOCKER_PROBE_OPTIONS=""
 
+# Gets parts of a URL
+# $1: url
+get_url_info() {
+    local -r res=$(sed -- "s%$MODULE_PUTLOCKER_REGEXP_URL.*%\1 \3%" <<< "$1")
+    IFS=' ' read -a URL_INFO <<< "$res"
+}
+
 # Output a putlocker file download URL
 # $1: cookie file
 # $2: putlocker url
@@ -39,9 +50,11 @@ MODULE_PUTLOCKER_PROBE_OPTIONS=""
 putlocker_download() {
     local -r COOKIE_FILE=$1
     local -r URL=$2
-    local -r BASE_URL='http://www.putlocker.com'
+    get_url_info "$URL"
+    local -r BASE_URL="${URL_INFO[0]}"
+    local -r URL_DOMAIN="${URL_INFO[1]}"
     local FILE_URL FILENAME PAGE HASH REL_PATH
-
+    
     PAGE=$(curl -c "$COOKIE_FILE" "$URL") || return
 
     # If link is dead, site sends a 302 redirect header to ../?404
@@ -110,7 +123,7 @@ putlocker_download() {
 putlocker_upload() {
     local -r FILE=$2
     local -r DESTFILE=$3
-    local -r BASE_URL='http://upload.putlocker.com/uploadapi.php'
+    local -r BASE_URL='http://upload.$URL_DOMAIN/uploadapi.php'
     local DATA MSG USER PASSWORD DL_URL
 
     if [ -n "$AUTH_FREE" ]; then
@@ -138,7 +151,7 @@ putlocker_upload() {
     fi
 
     local PAGE SRV_CGI SIZE_LIMIT SESSION AUTH_HASH DONE_ID
-    local -r UP_URL='http://www.putlocker.com/upload_form.php'
+    local -r UP_URL='http://www.$URL_DOMAIN/upload_form.php'
 
     PAGE=$(curl "$UP_URL") || return
     SRV_CGI=$(echo "$PAGE" | parse "'script'" ":[[:space:]]*'\([^']\+\)") || return
